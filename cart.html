@@ -738,10 +738,39 @@
 
         // Checkout function
         function checkout() {
+            // Check if user is logged in
+            if (!window.comicverseAuth.isLoggedIn()) {
+                // Show login prompt modal instead of redirecting immediately
+                const shouldLogin = confirm('You need to login to complete checkout. Would you like to login now?');
+                if (shouldLogin) {
+                    // Save current cart state
+                    localStorage.setItem('comicverse_cart', JSON.stringify(cart));
+                    // Redirect to login with return URL
+                    window.location.href = 'auth.html?return=cart.html&checkout=true';
+                }
+                return;
+            }
+            
+            // User is logged in, proceed with checkout
             document.getElementById('checkoutModal').style.display = 'block';
             cart = [];
             saveCart();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shouldCheckout = urlParams.get('checkout');
+            
+            if (shouldCheckout === 'true' && window.comicverseAuth.isLoggedIn() && cart.length > 0) {
+                // Auto-trigger checkout if user just logged in
+                setTimeout(() => {
+                    const proceedToCheckout = confirm('Welcome back! Would you like to proceed with checkout?');
+                    if (proceedToCheckout) {
+                        checkout();
+                    }
+                }, 500);
+            }
+        });
 
         // Close modal
         function closeModal() {
