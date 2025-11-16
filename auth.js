@@ -105,12 +105,9 @@ function updateNavWithUser() {
 document.addEventListener('DOMContentLoaded', function() {
     updateNavWithUser();
     
-    // Add auth check for cart page
-    if (window.location.pathname.includes('cart.html')) {
-        if (!requireAuth()) {
-            return; // Will redirect to login
-        }
-    }
+    // REMOVED: Auth check for cart page
+    // Cart is now accessible to everyone
+    // Authentication is only required at checkout
 });
 
 // Export functions for use in other scripts
