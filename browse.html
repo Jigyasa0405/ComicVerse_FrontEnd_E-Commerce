@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Comics - ComicVerse Hub</title>
+    <script src="auth.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff0040;
+            --secondary: #00ffff;
+            --accent: #ffff00;
+            --dark: #1a1a1a;
+            --dark-alt: #0d0d0d;
+            --dark-card: rgba(20, 20, 20, 0.92);
+            --text: #ffffff;
+            --text-dim: #b3b3b3;
+            --gradient: linear-gradient(135deg, #ff0040 0%, #ff6b9d 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e8e8e8;
+            background-image: url('Images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:  rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 0, 64, 0.08) 0%, rgba(0, 255, 255, 0.08) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav, .browse-container, footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            padding: 1rem 0;
+            z-index: 1000;
+            border-bottom: 3px solid var(--primary);
+            box-shadow: 0 4px 30px rgba(255, 0, 64, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .browse-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: #ff3e6e;
+        }
+
+        .page-subtitle {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            color: #e8829c;
+        }
+
+        .filters {
+            background: var(--dark-card);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.8rem;
+            background: var(--dark);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--text);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .results-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--dark-card);
+            border-radius: 5px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: var(--text-dim);
+        }
+
+        .clear-filters {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .clear-filters:hover {
+            background: #c20813;
+            transform: translateY(-2px);
+        }
+
+        .comic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .comic-card {
+            background: var(--dark-card);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .comic-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 0, 64, 0.4),
+                        0 0 30px rgba(0, 255, 255, 0.2);
+            border-color: var(--primary);
+        }
+
+        .comic-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .comic-card:hover .comic-image {
+            transform: scale(1.05);
+        }
+
+        .comic-info {
+            padding: 1.5rem;
+        }
+
+        .comic-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .comic-publisher {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .comic-genre {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255, 0, 64, 0.3), rgba(0, 255, 255, 0.3));
+            color: var(--text);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--secondary);
+            font-weight: 600;
+        }
+
+        .comic-price {
+            font-size: 1.3rem;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .no-results h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            background: var(--dark-alt);
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            border-top: 2px solid var(--primary);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: var(--text-dim);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .comic-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .results-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">ComicVerse</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="browse.html">Browse</a></li>
+                <li><a href="cart.html">
+                    <span class="cart-icon">
+                        🛒 Cart
+                        <span class="cart-count" id="cartCount">0</span>
+                    </span>
+                </a></li>
+                <!-- User section will be added here by auth.js -->
+            </ul>
+        </div>
+    </nav>
+
+    <div class="browse-container">
+        <div class="page-header">
+            <h1 class="page-title">Browse All Comics</h1>
+            <p class="page-subtitle">Discover your next favorite series from our extensive collection</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="publisherFilter">Publisher</label>
+                <select id="publisherFilter">
+                    <option value="">All Publishers</option>
+                    <option value="Marvel">Marvel</option>
+                    <option value="DC">DC</option>
+                    <option value="Image">Image</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="characterFilter">Character</label>
+                <select id="characterFilter">
+                    <option value="">All Characters</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="genreFilter">Genre</label>
+                <select id="genreFilter">
+                    <option value="">All Genres</option>
+                    <option value="Superhero">Superhero</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Horror">Horror</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="sortBy">Sort By</label>
+                <select id="sortBy">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="price-asc">Price (Low to High)</option>
+                    <option value="price-desc">Price (High to Low)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="results-info">
+            <div class="results-count" id="resultsCount">Showing all comics</div>
+            <button class="clear-filters" id="clearFilters">Clear Filters</button>
+        </div>
+
+        <div class="comic-grid" id="comicGrid"></div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About ComicVerse</h3>
+                <p>Your ultimate destination for comics from Marvel, DC, Image and independent publishers.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="browse.html">Browse Comics</a></li>
+                    <li><a href="cart.html">Shopping Cart</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Customer Service</h3>
+                <ul>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <p>Follow us on social media for the latest updates!</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 ComicVerse Hub. All rights reserved. | A Portfolio Project</p>
+        </div>
+    </footer>
+
+    <script>
+        const comics = [
+            {id: '001', title: 'The Amazing Spider-Man #1', publisher: 'Marvel', character: 'Spider-Man', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-15', image: 'Images/im001.jpg', synopsis: 'Peter Parker swings back into action in this thrilling new series! When a mysterious villain threatens New York City, Spider-Man must use all his skills to save the day.', creators: 'Written by Dan Slott, Art by Ryan Stegman', isNew: true},
+            {id: '002', title: 'Batman: The Dark Knight #50', publisher: 'DC', character: 'Batman', genre: 'Superhero', price: 18.99, releaseDate: '2025-01-10', image: 'Images/im002.jpg', synopsis: 'The culmination of an epic storyline! Batman faces his greatest challenge yet as Gotham City hangs in the balance. Can the Dark Knight overcome impossible odds?', creators: 'Written by Scott Snyder, Art by Greg Capullo', isNew: true},
+            {id: '003', title: 'X-Men: Uncanny #12', publisher: 'Marvel', character: 'X-Men', genre: 'Superhero', price: 16.99, releaseDate: '2024-12-20', image: 'Images/im003.webp', synopsis: 'The mutant saga continues! The X-Men discover a conspiracy that threatens all of mutantkind. Storm, Cyclops, and Wolverine must unite to face their deadliest enemy.', creators: 'Written by Kieron Gillen, Art by Salvador Larroca', isNew: false},
+            {id: '004', title: 'Wonder Woman #75', publisher: 'DC', character: 'Wonder Woman', genre: 'Superhero', price: 17.99, releaseDate: '2025-01-05', image: 'Images/im004.jpg', synopsis: 'Diana Prince returns to Themyscira for an epic anniversary issue! Secrets of her past are revealed as she confronts an ancient threat to the Amazons.', creators: 'Written by Gail Simone, Art by Terry Dodson', isNew: true},
+            {id: '005', title: 'The Avengers #200', publisher: 'Marvel', character: 'Avengers', genre: 'Superhero', price: 19.99, releaseDate: '2024-12-15', image: 'Images/im005.jpg', synopsis: 'A landmark 200th issue! Earth\'s Mightiest Heroes face their ultimate test. Iron Man, Captain America, Thor, and the team must save the universe from cosmic destruction.', creators: 'Written by Jonathan Hickman, Art by Jim Cheung', isNew: false},
+            {id: '006', title: 'The Flash: Speed Force #8', publisher: 'DC', character: 'Flash', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-12', image: 'Images/im006.jpg', synopsis: 'Barry Allen races through time itself! The Speed Force is unstable and only The Flash can restore balance before reality tears apart at the seams.', creators: 'Written by Joshua Williamson, Art by Carmine Di Giandomenico', isNew: true},
+            {id: '007', title: 'Saga Volume 1', publisher: 'Image', character: 'Alana & Marko', genre: 'Sci-Fi', price: 24.99, releaseDate: '2024-11-30', image: 'Images/im007.jpg', synopsis: 'The epic space opera begins! Star-crossed lovers from warring species flee across the galaxy with their newborn daughter, hunted by both sides.', creators: 'Written by Brian K. Vaughan, Art by Fiona Staples', isNew: false},
+            {id: '008', title: 'Invincible #144', publisher: 'Image', character: 'Mark Grayson', genre: 'Superhero', price: 16.99, releaseDate: '2024-12-10', image: 'Images/im008.avif', synopsis: 'Mark Grayson\'s journey reaches a turning point! The young superhero must make an impossible choice that will change his life forever.', creators: 'Written by Robert Kirkman, Art by Ryan Ottley', isNew: false},
+            {id: '009', title: 'Captain Marvel #30', publisher: 'Marvel', character: 'Captain Marvel', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-08', image: 'Images/im009.jpg', synopsis: 'Carol Danvers leads the fight against an alien invasion! As Earth\'s first line of defense, Captain Marvel shows why she\'s one of the universe\'s mightiest heroes.', creators: 'Written by Kelly Sue DeConnick, Art by David Lopez', isNew: true},
+            {id: '010', title: 'Green Lantern Corps #100', publisher: 'DC', character: 'Green Lantern', genre: 'Superhero', price: 18.99, releaseDate: '2024-12-28', image: 'Images/im010.jpg', synopsis: 'A historic 100th issue! The Green Lantern Corps faces extinction as a mysterious force threatens to destroy the guardians of the universe.', creators: 'Written by Geoff Johns, Art by Ivan Reis', isNew: false},
+            {id: '011', title: 'Thor: God of Thunder #25', publisher: 'Marvel', character: 'Thor', genre: 'Superhero', price: 17.99, releaseDate: '2025-01-03', image: 'Images/im011.jpg', synopsis: 'The God of Thunder wields Mjolnir against impossible odds! Thor battles across realms to prevent Ragnarok and save Asgard from total destruction.', creators: 'Written by Jason Aaron, Art by Esad Ribic', isNew: true},
+            {id: '012', title: 'The Walking Dead #193', publisher: 'Image', character: 'Rick Grimes', genre: 'Horror', price: 19.99, releaseDate: '2024-11-15', image: 'Images/im012.jpg', synopsis: 'The final chapter of the zombie apocalypse saga! Rick Grimes and his group face their ultimate challenge in a world overrun by the undead.', creators: 'Written by Robert Kirkman, Art by Charlie Adlard', isNew: false}
+        ];
+
+        let filteredComics = [...comics];
+
+        // Initialize cart
+        let cart = [];
+        try {
+            const saved = localStorage.getItem('comicverse_cart');
+            cart = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            cart = [];
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        // Populate character filter
+        function populateCharacterFilter() {
+            const characters = [...new Set(comics.map(c => c.character))].sort();
+            const select = document.getElementById('characterFilter');
+            characters.forEach(char => {
+                const option = document.createElement('option');
+                option.value = char;
+                option.textContent = char;
+                select.appendChild(option);
+            });
+        }
+
+        // Filter and sort functions
+        function applyFiltersAndSort() {
+            const publisher = document.getElementById('publisherFilter').value;
+            const character = document.getElementById('characterFilter').value;
+            const genre = document.getElementById('genreFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            filteredComics = comics.filter(comic => {
+                return (!publisher || comic.publisher === publisher) &&
+                       (!character || comic.character === character) &&
+                       (!genre || comic.genre === genre);
+            });
+
+            // Sort
+            filteredComics.sort((a, b) => {
+                switch(sortBy) {
+                    case 'title-asc':
+                        return a.title.localeCompare(b.title);
+                    case 'title-desc':
+                        return b.title.localeCompare(a.title);
+                    case 'price-asc':
+                        return a.price - b.price;
+                    case 'price-desc':
+                        return b.price - a.price;
+                    case 'date-desc':
+                        return new Date(b.releaseDate) - new Date(a.releaseDate);
+                    case 'date-asc':
+                        return new Date(a.releaseDate) - new Date(b.releaseDate);
+                    default:
+                        return 0;
+                }
+            });
+
+            displayComics();
+        }
+
+        function displayComics() {
+            const grid = document.getElementById('comicGrid');
+            const count = document.getElementById('resultsCount');
+
+            count.textContent = `Showing ${filteredComics.length} comic${filteredComics.length !== 1 ? 's' : ''}`;
+
+            if (filteredComics.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results" style="grid-column: 1/-1;">
+                        <h2>No comics found</h2>
+                        <p style="color: var(--text-dim); margin-bottom: 1rem;">Try adjusting your filters</p>
+                        <button class="clear-filters" onclick="clearFilters()">Clear All Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredComics.map(comic => `
+                <div class="comic-card" onclick="location.href='comic-detail.html?id=${comic.id}'">
+                    ${comic.isNew ? '<div class="new-badge">NEW</div>' : ''}
+                    <img src="${comic.image}" alt="${comic.title}" class="comic-image">
+                    <div class="comic-info">
+                        <div class="comic-title">${comic.title}</div>
+                        <div class="comic-publisher">${comic.publisher}</div>
+                        <span class="comic-genre">${comic.genre}</span>
+                        <div class="comic-price">$${comic.price.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearFilters() {
+            document.getElementById('publisherFilter').value = '';
+            document.getElementById('characterFilter').value = '';
+            document.getElementById('genreFilter').value = '';
+            document.getElementById('sortBy').value = 'title-asc';
+            applyFiltersAndSort();
+        }
+
+        // Event listeners
+        document.getElementById('publisherFilter').addEventListener('change', applyFiltersAndSort);
+        document.getElementById('characterFilter').addEventListener('change', applyFiltersAndSort);
+        document.getElementById('genreFilter').addEventListener('change', applyFiltersAndSort);
+        document.getElementById('sortBy').addEventListener('change', applyFiltersAndSort);
+        document.getElementById('clearFilters').addEventListener('click', clearFilters);
+
+        // Initialize
+        populateCharacterFilter();
+        displayComics();
+        updateCartCount();
+    </script>
+</body>
+</html>

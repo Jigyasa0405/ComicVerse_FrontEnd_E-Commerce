@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Detail - ComicVerse Hub</title>
+    <script src="auth.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff0040;
+            --secondary: #00ffff;
+            --accent: #ffff00;
+            --dark: #1a1a1a;
+            --dark-alt: #0d0d0d;
+            --dark-card: rgba(20, 20, 20, 0.92);
+            --text: #ffffff;
+            --text-dim: #b3b3b3;
+            --gradient: linear-gradient(135deg, #ff0040 0%, #ff6b9d 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e8e8e8;
+            background-image: url('Images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:  rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 0, 64, 0.08) 0%, rgba(0, 255, 255, 0.08) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav, .detail-container, footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            padding: 1rem 0;
+            z-index: 1000;
+            border-bottom: 3px solid var(--primary);
+            box-shadow: 0 4px 30px rgba(255, 0, 64, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .detail-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 4rem;
+        }
+
+        .detail-image-container {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .detail-image-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5),
+                        0 0 0 3px rgba(255, 255, 255, 0.1),
+                        0 0 30px rgba(255, 0, 64, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-image {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s ease;
+            cursor: zoom-in;
+        }
+
+        .detail-image-wrapper:hover .detail-image {
+            transform: scale(1.1);
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .detail-info {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .breadcrumb {
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .breadcrumb a {
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary);
+        }
+
+        .detail-info h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--dark-card);
+            border-radius: 10px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .genre-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255, 0, 64, 0.3), rgba(0, 255, 255, 0.3));
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--secondary);
+        }
+
+        .detail-price {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin: 2rem 0;
+            font-weight: bold;
+        }
+
+        .add-to-cart-section {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            padding: 1.2rem 3rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #c20813;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(229, 9, 20, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--dark-card);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+        }
+
+        .detail-section {
+            margin: 3rem 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .detail-synopsis {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: var(--text);
+            background: var(--dark-card);
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .creators-info {
+            background: var(--dark-card);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .creators-info p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .success-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            z-index: 2000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        footer {
+            background: var(--dark-alt);
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            border-top: 2px solid var(--primary);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: var(--text-dim);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .detail-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .detail-image-container {
+                position: static;
+            }
+
+            .detail-info h1 {
+                font-size: 2rem;
+            }
+
+            .detail-price {
+                font-size: 2rem;
+            }
+
+            .detail-meta {
+                gap: 1rem;
+            }
+
+            .add-to-cart-section {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">ComicVerse</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="browse.html">Browse</a></li>
+                <li><a href="cart.html">
+                    <span class="cart-icon">
+                        🛒 Cart
+                        <span class="cart-count" id="cartCount">0</span>
+                    </span>
+                </a></li>
+                <!-- User section will be added here by auth.js -->
+            </ul>
+        </div>
+    </nav>
+
+    <div class="detail-container" id="detailContainer">
+        <!-- Content will be loaded dynamically -->
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About ComicVerse</h3>
+                <p>Your ultimate destination for comics from Marvel, DC, Image and independent publishers.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="browse.html">Browse Comics</a></li>
+                    <li><a href="cart.html">Shopping Cart</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Customer Service</h3>
+                <ul>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <p>Follow us on social media for the latest updates!</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 ComicVerse Hub. All rights reserved. | A Portfolio Project</p>
+        </div>
+    </footer>
+
+    <script>
+        const comics = [
+            {id: '001', title: 'The Amazing Spider-Man #1', publisher: 'Marvel', character: 'Spider-Man', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-15', image: 'Images/im001.jpg', synopsis: 'Peter Parker swings back into action in this thrilling new series! When a mysterious villain threatens New York City, Spider-Man must use all his skills to save the day.', creators: 'Written by Dan Slott, Art by Ryan Stegman', isNew: true},
+            {id: '002', title: 'Batman: The Dark Knight #50', publisher: 'DC', character: 'Batman', genre: 'Superhero', price: 18.99, releaseDate: '2025-01-10', image: 'Images/im002.jpg', synopsis: 'The culmination of an epic storyline! Batman faces his greatest challenge yet as Gotham City hangs in the balance. Can the Dark Knight overcome impossible odds?', creators: 'Written by Scott Snyder, Art by Greg Capullo', isNew: true},
+            {id: '003', title: 'X-Men: Uncanny #12', publisher: 'Marvel', character: 'X-Men', genre: 'Superhero', price: 16.99, releaseDate: '2024-12-20', image: 'Images/im003.webp', synopsis: 'The mutant saga continues! The X-Men discover a conspiracy that threatens all of mutantkind. Storm, Cyclops, and Wolverine must unite to face their deadliest enemy.', creators: 'Written by Kieron Gillen, Art by Salvador Larroca', isNew: false},
+            {id: '004', title: 'Wonder Woman #75', publisher: 'DC', character: 'Wonder Woman', genre: 'Superhero', price: 17.99, releaseDate: '2025-01-05', image: 'Images/im004.jpg', synopsis: 'Diana Prince returns to Themyscira for an epic anniversary issue! Secrets of her past are revealed as she confronts an ancient threat to the Amazons.', creators: 'Written by Gail Simone, Art by Terry Dodson', isNew: true},
+            {id: '005', title: 'The Avengers #200', publisher: 'Marvel', character: 'Avengers', genre: 'Superhero', price: 19.99, releaseDate: '2024-12-15', image: 'Images/im005.jpg', synopsis: 'A landmark 200th issue! Earth\'s Mightiest Heroes face their ultimate test. Iron Man, Captain America, Thor, and the team must save the universe from cosmic destruction.', creators: 'Written by Jonathan Hickman, Art by Jim Cheung', isNew: false},
+            {id: '006', title: 'The Flash: Speed Force #8', publisher: 'DC', character: 'Flash', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-12', image: 'Images/im006.jpg', synopsis: 'Barry Allen races through time itself! The Speed Force is unstable and only The Flash can restore balance before reality tears apart at the seams.', creators: 'Written by Joshua Williamson, Art by Carmine Di Giandomenico', isNew: true},
+            {id: '007', title: 'Saga Volume 1', publisher: 'Image', character: 'Alana & Marko', genre: 'Sci-Fi', price: 24.99, releaseDate: '2024-11-30', image: 'Images/im007.jpg', synopsis: 'The epic space opera begins! Star-crossed lovers from warring species flee across the galaxy with their newborn daughter, hunted by both sides.', creators: 'Written by Brian K. Vaughan, Art by Fiona Staples', isNew: false},
+            {id: '008', title: 'Invincible #144', publisher: 'Image', character: 'Mark Grayson', genre: 'Superhero', price: 16.99, releaseDate: '2024-12-10', image: 'Images/im008.avif', synopsis: 'Mark Grayson\'s journey reaches a turning point! The young superhero must make an impossible choice that will change his life forever.', creators: 'Written by Robert Kirkman, Art by Ryan Ottley', isNew: false},
+            {id: '009', title: 'Captain Marvel #30', publisher: 'Marvel', character: 'Captain Marvel', genre: 'Superhero', price: 15.99, releaseDate: '2025-01-08', image: 'Images/im009.jpg', synopsis: 'Carol Danvers leads the fight against an alien invasion! As Earth\'s first line of defense, Captain Marvel shows why she\'s one of the universe\'s mightiest heroes.', creators: 'Written by Kelly Sue DeConnick, Art by David Lopez', isNew: true},
+            {id: '010', title: 'Green Lantern Corps #100', publisher: 'DC', character: 'Green Lantern', genre: 'Superhero', price: 18.99, releaseDate: '2024-12-28', image: 'Images/im010.jpg', synopsis: 'A historic 100th issue! The Green Lantern Corps faces extinction as a mysterious force threatens to destroy the guardians of the universe.', creators: 'Written by Geoff Johns, Art by Ivan Reis', isNew: false},
+            {id: '011', title: 'Thor: God of Thunder #25', publisher: 'Marvel', character: 'Thor', genre: 'Superhero', price: 17.99, releaseDate: '2025-01-03', image: 'Images/im011.jpg', synopsis: 'The God of Thunder wields Mjolnir against impossible odds! Thor battles across realms to prevent Ragnarok and save Asgard from total destruction.', creators: 'Written by Jason Aaron, Art by Esad Ribic', isNew: true},
+            {id: '012', title: 'The Walking Dead #193', publisher: 'Image', character: 'Rick Grimes', genre: 'Horror', price: 19.99, releaseDate: '2024-11-15', image: 'Images/im012.jpg', synopsis: 'The final chapter of the zombie apocalypse saga! Rick Grimes and his group face their ultimate challenge in a world overrun by the undead.', creators: 'Written by Robert Kirkman, Art by Charlie Adlard', isNew: false}
+        ];
+
+        let cart = [];
+        try {
+            const saved = localStorage.getItem('comicverse_cart');
+            cart = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            cart = [];
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        function saveCart() {
+            try {
+                localStorage.setItem('comicverse_cart', JSON.stringify(cart));
+                updateCartCount();
+            } catch (e) {
+                console.error('Failed to save cart');
+            }
+        }
+
+        function addToCart(comic) {
+            const existing = cart.find(item => item.id === comic.id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({...comic, quantity: 1});
+            }
+            saveCart();
+            showSuccessMessage();
+        }
+
+        function showSuccessMessage() {
+            const msg = document.createElement('div');
+            msg.className = 'success-message';
+            msg.textContent = '✓ Added to cart successfully!';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        }
+
+        function loadComicDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const comicId = urlParams.get('id');
+            const comic = comics.find(c => c.id === comicId);
+
+            if (!comic) {
+                document.getElementById('detailContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+                        <h1>Comic not found</h1>
+                        <p style="color: var(--text-dim); margin: 1rem 0;">The comic you're looking for doesn't exist.</p>
+                        <a href="browse.html" class="btn">Browse All Comics</a>
+                    </div>
+                `;
+                return;
+            }
+
+            document.title = `${comic.title} - ComicVerse Hub`;
+
+            document.getElementById('detailContainer').innerHTML = `
+                <div class="detail-image-container">
+                    <div class="detail-image-wrapper">
+                        ${comic.isNew ? '<div class="new-badge">NEW RELEASE</div>' : ''}
+                        <img src="${comic.image}" alt="${comic.title}" class="detail-image">
+                    </div>
+                </div>
+
+                <div class="detail-info">
+                    <div class="breadcrumb">
+                        <a href="index.html">Home</a> / <a href="browse.html">Browse</a> / ${comic.title}
+                    </div>
+
+                    <h1>${comic.title}</h1>
+
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Publisher</span>
+                            <span class="meta-value">${comic.publisher}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Character</span>
+                            <span class="meta-value">${comic.character}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Genre</span>
+                            <span class="genre-tag">${comic.genre}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Release Date</span>
+                            <span class="meta-value">${new Date(comic.releaseDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-price">$${comic.price.toFixed(2)}</div>
+
+                    <div class="add-to-cart-section">
+                        <button class="btn" onclick="addToCartFromDetail()">
+                            🛒 Add to Cart
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.href='browse.html'">
+                            ← Continue Shopping
+                        </button>
+                    </div>
+
+                    <div class="detail-section">
+                        <h2 class="section-title">Synopsis</h2>
+                        <div class="detail-synopsis">
+                            ${comic.synopsis}
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h2 class="section-title">Creative Team</h2>
+                        <div class="creators-info">
+                            <p>${comic.creators}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            window.currentComic = comic;
+        }
+
+        function addToCartFromDetail() {
+            if (window.currentComic) {
+                addToCart(window.currentComic);
+            }
+        }
+
+        loadComicDetail();
+        updateCartCount();
+    </script>
+</body>
+</html>
